@@ -1,50 +1,34 @@
 (set-env!
  :source-paths    #{"src/cljs" "src/clj"}
  :resource-paths  #{"resources"}
- :dependencies '[[adzerk/boot-cljs      "0.0-2760-0" :scope "test"]
-                 [adzerk/boot-cljs-repl "0.2.0"      :scope "test"]
+ :dependencies '[[org.clojure/clojurescript "0.0-2814"]
+                 [adzerk/boot-cljs      "0.0-2814-1" :scope "test"]
                  [adzerk/boot-reload    "0.2.4"      :scope "test"]
                  [pandeiro/boot-http    "0.6.1"      :scope "test"]
                  [jeluard/boot-notify   "0.1.1"      :scope "test"]
                  [boot-garden           "1.2.5-1"    :scope "test"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
-                 [pani "0.0.4-SNAPSHOT" :exclusions [com.firebase/firebase-client-jvm]]
-                 [rum "0.2.2"]])
+                 [matchbox "0.0.5-SNAPSHOT" :exclusions [com.firebase/firebase-client-jvm]]
+                 [rum "0.2.4" :exclusions [com.cemerick/austin]]])
 
 (require
  '[adzerk.boot-cljs      :refer [cljs]]
- '[adzerk.boot-cljs-repl :refer [cljs-repl start-repl]]
  '[adzerk.boot-reload    :refer [reload]]
  '[pandeiro.boot-http    :refer [serve]]
  '[boot-garden.core      :refer [garden]]
  '[jeluard.boot-notify   :refer [notify]])
 
-;; (deftask browser-repl
-;;   "Adapted from Mies' script/brepl.clj"
-;;   []
-;;   (with-pre-wrap fileset
-;;     (clojure.main/main "-e" "
-;;      (require
-;;       '[cljs.repl :as repl]
-;;       '[cljs.repl.browser :as browser])
-
-;;      (repl/repl* (browser/repl-env)
-;;                  {:output-dir \".browser-repl\"
-;;                   :optimizations :none
-;;                   :cache-analysis true
-;;                   :source-map true})")
-;;     fileset))
-
 (deftask build []
   (comp (notify)
         (cljs)
         (garden :styles-var 'chaf-light.styles/screen
+                :vendors ["webkit"]
+                :auto-prefix #{:align-items}
                 :output-to "css/garden.css")))
 
 (deftask dev-run []
   (comp (serve)
         (watch)
-        ;(cljs-repl)
         (reload)
         (build)))
 
@@ -63,12 +47,11 @@
 
 (deftask prod
   "Simple alias to run application in production mode
-   NO REPL OR AUTOMATIC RELOADING CODE INSERTED"
+   No REPL or automatic reloading code inserted."
   []
   (comp (production)
         (serve)
         (watch)
-        ;; (cljs-repl)
         (build)))
 
 (deftask dev
