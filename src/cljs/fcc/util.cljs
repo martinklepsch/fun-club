@@ -1,4 +1,4 @@
-(ns chaf-light.util
+(ns fcc.util
   (:require [goog.crypt :as crypt ])
   (:import goog.date.DateTime
            goog.crypt.Md5))

@@ -1,2 +1,2 @@
-{:require  [chaf-light.app]
- :init-fns [chaf-light.app/init]}
+{:require  [fcc.app]
+ :init-fns [fcc.app/init]}

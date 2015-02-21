@@ -1,9 +1,9 @@
-(ns chaf-light.app
+(ns fcc.app
   (:require-macros [cljs.core.async.macros :refer [go-loop]])
   (:require [cljs.core.async :as async :refer [<!]]
-            [chaf-light.async :as as]
-            [chaf-light.firebase :as fb]
-            [chaf-light.util :as util]
+            [fcc.async :as as]
+            [fcc.firebase :as fb]
+            [fcc.util :as util]
             [rum])
   (:import goog.date.DateTime))
 

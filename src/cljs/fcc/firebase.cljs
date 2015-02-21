@@ -1,10 +1,10 @@
-(ns chaf-light.firebase
+(ns fcc.firebase
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs.core.async :as async :refer [put! <!]]
             [matchbox.core :as mb]
             [matchbox.async :as mba]))
 
-(defonce fb (mb/connect "https://chaf-light.firebaseio.com/"))
+(defonce fb (mb/connect "https://fun-club-chat.firebaseio.com/"))
 
 (defn get-auth [ch]
   (if-let [auth (.getAuth fb)]

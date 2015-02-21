@@ -1,8 +1,8 @@
-(ns chaf-light.async
+(ns fcc.async
   (:require-macros [cljs.core.async.macros :refer [go-loop]])
   (:require [cljs.core.async :as async :refer [<!]]
-            [chaf-light.util :as util]
-            [chaf-light.firebase :as fb]))
+            [fcc.util :as util]
+            [fcc.firebase :as fb]))
 
 (defonce event-bus (async/chan))
 (def event-feed (async/mult event-bus))

@@ -21,7 +21,7 @@
 (deftask build []
   (comp (notify)
         (cljs)
-        (garden :styles-var 'chaf-light.styles/screen
+        (garden :styles-var 'fcc.styles/screen
                 :vendors ["webkit"]
                 :auto-prefix #{:align-items}
                 :output-to "css/garden.css")))
@@ -42,7 +42,7 @@
   (task-options! cljs {:optimizations :none
                        :unified-mode true
                        :source-map true}
-                 reload {:on-jsload 'chaf-light.app/init})
+                 reload {:on-jsload 'fcc.app/init})
   identity)
 
 (deftask prod

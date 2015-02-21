@@ -1,4 +1,4 @@
-(ns chaf-light.styles
+(ns fcc.styles
   (:require [garden.def :refer [defrule defstyles]]
             [garden.stylesheet :refer [rule]]))
 
