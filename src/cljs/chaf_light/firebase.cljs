@@ -1,9 +1,10 @@
 (ns chaf-light.firebase
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs.core.async :as async :refer [put! <!]]
-            [pani.cljs.core :as pani]))
+            [matchbox.core :as mb]
+            [matchbox.async :as mba]))
 
-(defonce fb (js/Firebase. "https://chaf-light.firebaseio.com/"))
+(defonce fb (mb/connect "https://chaf-light.firebaseio.com/"))
 
 (defn get-auth [ch]
   (if-let [auth (.getAuth fb)]
@@ -29,25 +30,30 @@
         (put! ch [:account/created userdata])))))
 
 (defn ensure-user-persisted [auth ch]
-  (let [uid (:uid auth)
-        res (pani/get-in fb [:users uid])]
+  (let [uid  (:uid auth)
+        info {:email    (-> auth :password :email)
+              :provider (-> auth :provider)}
+        res  (mba/deref-in< fb [:users uid])]
     (go
       (let [user (<! res)]
         (when-not user
-          (pani/set! fb [:users uid] auth)
+          (mb/reset-in! fb [:users uid] info)
           (put! ch [:account/persisted uid]))))))
 
-(defn on [ref type cb]
-  (let [ev-type (-> type name (clojure.string/replace "-" "_"))
-        callb   #(cb (js->clj (.val %) :keywordize-keys true))]
-    (.off ref ev-type callb) ; ensure idempotency
-    (.on ref ev-type callb)))
+;; (defn on [ref type cb]
+;;   (let [ev-type (-> type name (clojure.string/replace "-" "_"))
+;;         callb   #(cb (js->clj (.val %) :keywordize-keys true))]
+;;     (.off ref ev-type callb) ; ensure idempotency
+;;     (.on ref ev-type callb)))
 
 (defn message-feed [ch]
-  (let [ref (pani/walk-root fb [:messages])]
-    (on ref :child-added #(put! ch [:message/in %]))))
+  (mb/listen-to fb [:messages] :child-added #(put! ch [:message/in (second %)])))
+
+(defn user-feed [ch]
+  (mb/listen-to fb [:users] :child-added
+                #(put! ch [:user/in (merge (second %) {:uid (first %)})])))
+  ;; (let [ref (pani/walk-root fb [:users])]
+  ;;   (on ref :child-added #(put! ch [:user/in %]))))
 
 (defn save-message [message]
-  (pani/push! fb [:messages] message))
-;; (go (.log js/console (<! (pani-get-in fb [:users "simplelogin:10"]))))
-;; (.log js/console nil)
+  (mb/conj-in! fb [:messages] message))
