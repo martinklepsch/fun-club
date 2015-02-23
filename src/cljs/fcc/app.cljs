@@ -3,6 +3,14 @@
 
 (defonce app-state (atom {:login-view true}))
 
+(rum/defc validating-input < rum/reactive [ref check-valid]
+  [:input {:type "text"
+           :style {:border-color (if (seq @ref)
+                                   (if (check-valid @ref) "green" "red")
+                                   "black")}
+           :value @ref
+           :on-change #(reset! ref (.. % -target -value))}])
+
 (rum/defc input < rum/reactive [ref attrs]
   [:input (merge {:type "text"
                   :value @ref
@@ -10,7 +18,7 @@
                  attrs)])
 
 (rum/defc signup < rum/reactive [data]
-  [:.signup.sc-form
+  [:.signup
    (if (:error (rum/react data))
      [:span.error (:error (rum/react data))])
    (input (rum/cursor data [:email]) {:placeholder "Email"})
@@ -21,12 +29,19 @@
     " or "
     [:button.linklike {:on-click (js/alert "show-login")} "Login"]]])
 
+(defn email? [str]
+  (.test #"\S+@\S+\.\S+" str))
+
+(defn long-enough? [n str]
+  (> (count str) n))
+
 (rum/defc login < rum/reactive [data]
-  [:.login.sc-form
-   (if (:error (rum/react data))
-     [:span.error (:error (rum/react data))])
-   (input (rum/cursor data [:email]) {:placeholder "Email"})
-   (input (rum/cursor data [:password]) {:placeholder "Password" :type "password"})
+  [:.login
+   (when err [:span.error err])
+   [:label "Email"]
+   (validating-input (rum/cursor data [:email]) email?)
+   [:label "Password"]
+   (validating-input (rum/cursor data [:password]) (partial long-enough? 8))
    [:button.ui.signup {:on-click #(js/alert (pr-str (select-keys @data [:email :password])))}
     "Login"]
    [:span.alt
