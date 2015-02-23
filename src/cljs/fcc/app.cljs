@@ -2,31 +2,24 @@
   (:require [rum]))
 
 (defonce app-state (atom {:login-view true}))
-
-(rum/defc input < rum/reactive [ref attrs]
-  [:input (merge {:type "text"
-                  :value @ref
-                  :on-change #(reset! ref (.. % -target -value))}
-                 attrs)])
+;(swap! app-state assoc :login-view false)
 
 (rum/defc signup < rum/reactive [data]
-  [:.signup.sc-form
-   (if (:error (rum/react data))
-     [:span.error (:error (rum/react data))])
-   (input (rum/cursor data [:email]) {:placeholder "Email"})
-   (input (rum/cursor data [:password]) {:placeholder "Password" :type "password"})
+  [:.signup
+   [:h3 "Signup"]
+   [:input {:placeholder "email"}]
+   [:input {:placeholder "password" :type "password"}]
    [:button.ui.signup {:on-click #(js/alert (pr-str (select-keys @data [:email :password])))}
     "Signup"]
    [:span.alt
     " or "
-    [:button.linklike {:on-click (js/alert "show-login")} "Login"]]])
+    [:button.linklike {:on-click #(js/alert "show-login")} "Login"]]])
 
 (rum/defc login < rum/reactive [data]
-  [:.login.sc-form
-   (if (:error (rum/react data))
-     [:span.error (:error (rum/react data))])
-   (input (rum/cursor data [:email]) {:placeholder "Email"})
-   (input (rum/cursor data [:password]) {:placeholder "Password" :type "password"})
+  [:.login
+   [:h3 "Login"]
+   [:input {:placeholder "email"}]
+   [:input {:placeholder "password" :type "password"}]
    [:button.ui.signup {:on-click #(js/alert (pr-str (select-keys @data [:email :password])))}
     "Login"]
    [:span.alt
