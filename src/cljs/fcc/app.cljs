@@ -35,9 +35,13 @@
 (rum/defc login < rum/reactive [data]
   [:.login
    [:h3 "Login"]
-   (input (rum/cursor data [:email]) {:placeholder "email"})
-   (input (rum/cursor data [:password]) {:placeholder "password" :type "password"})
-   [:button.ui.signup {:on-click #(js/alert (pr-str (select-keys @data [:email :password])))}
+   (validating-input (rum/cursor data [:email])
+                     #(long-enough? 5 %)
+                     {:placeholder "email"})
+   (validating-input (rum/cursor data [:password])
+                     #(long-enough? 10 %)
+                     {:placeholder "password" :type "password"})
+   [:button.ui.signup {:on-click (send! [:login (select-keys @data [:email :password])])}
     "Login"]
    [:span.alt
     " or "
