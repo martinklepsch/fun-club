@@ -9,31 +9,31 @@
 
 (defonce app-state (atom {:login-view true}))
 
-;; (defn async-mixin [read-chan callback]
-;;   {:init {:chans {:mounted (async/chan)}}
-;;    :will-unmont (fn [{{mounted :mounted} :chans}]
-;;                   (async/close! mounted))
-;;    :did-mount (fn [{{mounted :mounted} :chans}]
-;;                 (go-loop []
-;;                   (when-some [[v ch] (async/alts! [read-chan mounted])]
-;;                     (callback v)
-;;                     (recur))))})
-
 (rum/defc gravatar [email]
   (let [s (if email (util/md5 email) "not-found")]
     [:img.avatar {:src (str "http://www.gravatar.com/avatar/" s "?s=30&d=retro")}]))
 
 (rum/defc input < rum/reactive [ref attrs]
-  [:input (merge {:type "text"
-                  :value @ref
+  [:input (merge {:value @ref
                   :on-change #(reset! ref (.. % -target -value))}
                  attrs)])
+
+(defn email? [str]
+  (.test #"\S+@\S+\.\S+" str))
+
+(defn long-enough? [n str]
+  (> (count str) n))
+
+(rum/defc validating-input < rum/reactive [ref test-fn attrs]
+  (let [style (when (seq @ref)
+                {:style {:border-color (if (test-fn @ref) "lime" "red")}})]
+    (input ref (merge attrs style))))
 
 (rum/defc signup < rum/reactive [data]
   [:.signup.sc-form
    (if (:error (rum/react data))
      [:span.error (:error (rum/react data))])
-   (input (rum/cursor data [:email]) {:placeholder "Email"})
+   (validating-input (rum/cursor data [:email]) email? {:placeholder "Email"})
    (input (rum/cursor data [:password]) {:placeholder "Password" :type "password"})
    [:button.ui.signup {:on-click (as/send! [:account/new (select-keys @data [:email :password])])}
     "Signup"]
@@ -45,7 +45,7 @@
   [:.login.sc-form
    (if (:error (rum/react data))
      [:span.error (:error (rum/react data))])
-   (input (rum/cursor data [:email]) {:placeholder "Email"})
+   (validating-input (rum/cursor data [:email]) email? {:placeholder "Email"})
    (input (rum/cursor data [:password]) {:placeholder "Password" :type "password"})
    [:button.ui.signup {:on-click (as/send! [:session/new (select-keys @data [:email :password])])}
     "Login"]
