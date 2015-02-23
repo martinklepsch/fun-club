@@ -1,8 +1,35 @@
 (ns fcc.app
-  (:require [rum]))
+  (:require-macros [cljs.core.async.macros :refer [go-loop]])
+  (:require [cljs.core.async :as async :refer [<!]]
+            [rum]))
 
 (defonce app-state (atom {:login-view true}))
 ;(swap! app-state assoc :login-view false)
+
+(defonce event-bus (async/chan))
+
+(defn send! [m]
+  (fn [ev]
+    (async/put! event-bus m)
+    (.stopPropagation ev)))
+
+(defmulti handle first)
+
+(defmethod handle :default
+  [[t d] app-state]
+  (.warn js/console (str "No handler for " t)))
+
+(defmethod handle :login
+  [[t d] app-state]
+  (swap! app-state assoc :current-user true))
+
+(defmethod handle :show-login
+  [[t d] app-state]
+  (swap! app-state assoc :login-view true))
+
+(defmethod handle :show-signup
+  [[t d] app-state]
+  (swap! app-state assoc :login-view false))
 
 (defn long-enough? [n str]
   (> (count str) n))
@@ -26,11 +53,11 @@
    (validating-input (rum/cursor data [:password])
                      #(long-enough? 10 %)
                      {:placeholder "password" :type "password"})
-   [:button.ui.signup {:on-click #(js/alert (pr-str (select-keys @data [:email :password])))}
+   [:button.ui.signup {:on-click (send! [:signup (select-keys @data [:email :password])])}
     "Signup"]
    [:span.alt
     " or "
-    [:button.linklike {:on-click #(js/alert "show-login")} "Login"]]])
+    [:button.linklike {:on-click (send! [:show-login])} "Login"]]])
 
 (rum/defc login < rum/reactive [data]
   [:.login
@@ -45,7 +72,7 @@
     "Login"]
    [:span.alt
     " or "
-    [:button.linklike {:on-click #(js/alert "show-signup")} "Signup"]]])
+    [:button.linklike {:on-click (send! [:show-signup])} "Signup"]]])
 
 (rum/defc app < rum/reactive [state]
   (if (:current-user (rum/react state))
@@ -57,6 +84,11 @@
        (signup (rum/cursor state [:signup])))]))
 
 (defn init []
+
+  (go-loop [v (<! event-bus)]
+    (.log js/console (pr-str v))
+    (handle v app-state)
+    (recur (<! event-bus)))
 
   (add-watch app-state :global-watch
              (fn [_ _ _ n]
