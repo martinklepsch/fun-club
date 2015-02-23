@@ -4,11 +4,28 @@
 (defonce app-state (atom {:login-view true}))
 ;(swap! app-state assoc :login-view false)
 
+(defn long-enough? [n str]
+  (> (count str) n))
+
+(rum/defc input < rum/reactive [ref attrs]
+  [:input (merge {:value @ref
+                  :on-change #(reset! ref (.. % -target -value))}
+                 attrs)])
+
+(rum/defc validating-input < rum/reactive [ref test-fn attrs]
+  (let [style (when (seq @ref)
+                {:style {:border-color (if (test-fn @ref) "lime" "red")}})]
+    (input ref (merge attrs style))))
+
 (rum/defc signup < rum/reactive [data]
   [:.signup
    [:h3 "Signup"]
-   [:input {:placeholder "email"}]
-   [:input {:placeholder "password" :type "password"}]
+   (validating-input (rum/cursor data [:email])
+                     #(long-enough? 5 %)
+                     {:placeholder "email"})
+   (validating-input (rum/cursor data [:password])
+                     #(long-enough? 10 %)
+                     {:placeholder "password" :type "password"})
    [:button.ui.signup {:on-click #(js/alert (pr-str (select-keys @data [:email :password])))}
     "Signup"]
    [:span.alt
@@ -18,8 +35,8 @@
 (rum/defc login < rum/reactive [data]
   [:.login
    [:h3 "Login"]
-   [:input {:placeholder "email"}]
-   [:input {:placeholder "password" :type "password"}]
+   (input (rum/cursor data [:email]) {:placeholder "email"})
+   (input (rum/cursor data [:password]) {:placeholder "password" :type "password"})
    [:button.ui.signup {:on-click #(js/alert (pr-str (select-keys @data [:email :password])))}
     "Login"]
    [:span.alt
